@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>FLV视频流式播放</title>
+    <link rel="stylesheet" href="./css/mystyle.css" />
+    <!-- <style></style> -->
+  </head>
+  <body>
+    <input type="text" class="input" id="input" placeholder="请输入..." />
+
+    <!-- <button onclick="startDownload()">开始下载</button> -->
+    <!-- <div id="videoContainer"></div> -->
+
+    <!-- <video id="videoPlayer" controls autoplay></video> -->
+    <!-- <script src="player2.js"></script> -->
+
+    <!-- <script src="player3.js"></script> -->
+    <div class="video-container">
+      <video id="video" controls></video>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@^1.5.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+      var input = document.getElementById('input')
+      // 监听输入信息
+      input.addEventListener('keyup', function (event) {
+        // 获取按键的键码
+        var keyCode = event.keyCode || event.which
+        // 判断按下的键是否是回车键
+        if (keyCode === 13) {
+          // alert('Enter key pressed!')
+          var text = input.value
+          if (isEmptyString(text)) {
+            console.log('播放地址为空')
+            return
+          }
+          if (hasM3U8(text)) {
+            playdemo2(text)
+            return
+          }
+          playdemo1(text)
+        }
+      })
+      // input.addEventListener('keyup', function (event) {
+      //   if (event.keyCode === 13) {
+      //   }
+      // })
+
+      window.addEventListener('DOMContentLoaded', maintainAspectRatio)
+      // 监听窗口大小变化事件：
+      window.addEventListener('resize', maintainAspectRatio)
+
+      function maintainAspectRatio() {
+        console.log('maintainAspectRatio')
+        const videoElement = document.getElementById('video')
+        const aspectRatio = 16 / 9 // 例如，16:9宽高比
+        const offset = -50 // 偏移量，根据需要进行调整
+
+        // const width = videoElement.offsetWidth
+        const screenWidth = window.innerWidth
+        // console.log(`屏幕宽度：${screenWidth}`)
+        let width = screenWidth + offset
+        if (width > 960) {
+          width = 960
+        }
+        const height = width / aspectRatio
+
+        videoElement.style.width = `${width}px`
+        videoElement.style.height = `${height}px`
+      }
+
+      const playdemo1 = videoURL => {
+        if (isEmptyString(videoURL)) {
+          console.log('播放地址为空')
+          return
+        }
+        if (flvjs.isSupported()) {
+          const videoElement = document.getElementById('video')
+          const flvPlayer = flvjs.createPlayer({
+            type: 'flv',
+            url: videoURL,
+          })
+          flvPlayer.attachMediaElement(videoElement)
+          flvPlayer.load()
+          flvPlayer.play()
+        }
+      }
+
+      const playdemo2 = videoURL => {
+        if (isEmptyString(videoURL)) {
+          console.log('播放地址为空')
+          return
+        }
+        if (Hls.isSupported()) {
+          const videoElement = document.getElementById('video')
+          const hls = new Hls()
+          hls.loadSource(videoURL)
+          hls.attachMedia(videoElement)
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            videoElement.play()
+          })
+        }
+      }
+
+      function isEmptyString(str) {
+        return str.trim().length === 0
+      }
+      function hasM3U8(str) {
+        return str.includes('m3u8')
+      }
+    </script>
+  </body>
+</html>

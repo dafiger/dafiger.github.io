@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>解析本地 M3U8 文件</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        margin: 0;
+      }
+      #video {
+        width: 80%;
+        max-width: 800px;
+        margin-top: 20px;
+      }
+      input,
+      button,
+      select {
+        margin: 10px;
+        padding: 10px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="file" id="fileInput" accept=".m3u8" />
+    <select id="channelSelect">
+      <option value="">请选择频道</option>
+    </select>
+    <video id="video" controls></video>
+
+    <!-- 引入 HLS.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+      const fileInput = document.getElementById('fileInput')
+      const channelSelect = document.getElementById('channelSelect')
+      const video = document.getElementById('video')
+
+      function parseM3U8(content) {
+        const lines = content.split('\n')
+        const channels = []
+
+        lines.forEach(line => {
+          if (line.startsWith('#EXTINF:')) {
+            const [duration, info] = line.split(',', 2)
+            // console.log(info)
+            const channel = info.trim()
+            console.log(channel)
+            channels.push(channel)
+          }
+          if (line.startsWith('http')) {
+            channels.push(line.trim())
+          }
+        })
+
+        return channels
+      }
+
+      function loadM3U8File(file) {
+        const reader = new FileReader()
+        reader.onload = function (event) {
+          const content = event.target.result
+          const channels = parseM3U8(content)
+
+          // // 清空下拉菜单
+          // channelSelect.innerHTML = '<option value="">请选择频道</option>'
+
+          // // 添加频道到下拉菜单
+          // channels.forEach((channel, index) => {
+          //   // console.log(`遍历：${index}`)
+          //   if (channel.startsWith('http')) {
+          //     channelSelect.innerHTML += `<option value="${channel}">频道 ${index + 1}</option>`
+          //   }
+          // })
+
+          // 清空下拉菜单
+          channelSelect.innerHTML = ''
+
+          // 遍历 channels 数组，注意步进为2，以便处理频道名称和频道 URL
+          for (let i = 0; i < channels.length; i += 2) {
+            const channelName = channels[i]
+            const channelUrl = channels[i + 1]
+
+            // 创建选项元素
+            const option = document.createElement('option')
+            option.value = channelUrl // 选项的值为频道 URL
+            option.textContent = channelName // 选项的显示文本为频道名称
+            channelSelect.appendChild(option) // 将选项添加到 select 元素中
+          }
+
+          // 添加选择变化事件监听
+          channelSelect.addEventListener('change', function () {
+            const selectedUrl = this.value
+            if (selectedUrl) {
+              loadVideo(selectedUrl)
+            }
+          })
+        }
+        reader.readAsText(file)
+      }
+
+      function loadVideo(url) {
+        if (Hls.isSupported()) {
+          const hls = new Hls()
+          hls.loadSource(url)
+          hls.attachMedia(video)
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            video.play()
+          })
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url
+          video.addEventListener('loadedmetadata', function () {
+            video.play()
+          })
+        } else {
+          console.error('您的浏览器不支持 HLS.js 或直接支持 HLS 的播放')
+        }
+      }
+
+      fileInput.addEventListener('change', function (event) {
+        const file = event.target.files[0]
+        if (file) {
+          loadM3U8File(file)
+        }
+      })
+    </script>
+  </body>
+</html>
