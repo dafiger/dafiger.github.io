@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Video.js HLS Player</title>
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 20px;
+      }
+      input,
+      button {
+        margin: 10px;
+      }
+      /* video {
+        max-width: 100%;
+        height: auto;
+      } */
+    </style>
+  </head>
+  <body>
+    <h1>Video.js HLS Player</h1>
+    <input type="text" id="urlInput" placeholder="输入HLS流的链接" size="50" />
+    <button onclick="loadVideo()">播放视频</button>
+    <br />
+    <br />
+    <video id="videoElement" class="video-js vjs-default-skin" controls width="640" height="360">
+      <!-- 默认加载的源文件 -->
+    </video>
+
+    <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
+    <script>
+      var player = videojs('videoElement')
+
+      function loadVideo() {
+        var url = document.getElementById('urlInput').value
+        player.src({
+          src: url,
+          type: 'application/x-mpegURL'
+        })
+        player.play()
+      }
+    </script>
+  </body>
+</html>
